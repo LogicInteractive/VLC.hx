@@ -8,10 +8,11 @@ namespace Kore
 	{
 
 	public:
-		LibVLCVideo(const char* filename);
+		LibVLCVideo();
 		~LibVLCVideo()
 		{
 			// delete image;
+			dispose();
 		}
 		Graphics4::Texture* currentImage();
 		void setSource(const char* filename);
@@ -21,29 +22,34 @@ namespace Kore
 		int width();
 		int height();
 		float getPosition();
+		void setPosition(float newPosition);
+		void setAudioOutput(const char* audioDeviceName);		
 		double duration;
 		double position;
 		bool finished;
 		bool paused;
-		void update(double time);
 
-		//Callbacks
-		static void *lockStatic(void *data, void **p_pixels);
-		static void unlockStatic(void *data, void *id, void *const *p_pixels);
-		static void displayStatic(void *data, void *id);
-		static unsigned setupStatic(void** data, char* chroma, unsigned* width, unsigned* height, unsigned* pitches, unsigned* lines);
-		static void cleanupStatic(void *data);
 		void *lock(void **p_pixels);
 		void unlock(void *id, void *const *p_pixels);
 		void display(void *id);
 		unsigned setupFormat(char* chroma, unsigned* width, unsigned* height, unsigned* pitches, unsigned* lines);
 		void cleanupFormat();
+		void vlcEvent(const libvlc_event_t *event);
+		void registerEvents();
+		void unRegisterEvents();
+		void dispose();
 
-		int vidwidth;
-		int vidheight;
 		bool canDraw;
 		bool needsUpdate = false;
 		bool uniqueFullscreenMode = false;
+
+		//Static callbacks
+		static void *lockStatic(void *data, void **p_pixels);
+		static void unlockStatic(void *data, void *id, void *const *p_pixels);
+		static void displayStatic(void *data, void *id);
+		static unsigned setupStatic(void** data, char* chroma, unsigned* width, unsigned* height, unsigned* pitches, unsigned* lines);
+		static void cleanupStatic(void *data);
+		static void vlcEventStatic(const libvlc_event_t *event, void *data);
 
 	private:
 		u8* pixels;

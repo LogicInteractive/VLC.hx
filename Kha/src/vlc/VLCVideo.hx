@@ -8,16 +8,21 @@ package vlc;
 @:headerClassCode('Kore::LibVLCVideo* video;')
 class VLCVideo extends kha.Video
 {
-	public function new(filename: String, ?uniqueFullscreenMode:Bool=false)
+	public function new(?filename:String, ?uniqueFullscreenMode:Bool=false)
 	{
 		super();
-		// setUniqueFullscreenMode(uniqueFullscreenMode);
-		init(filename);
+		init();
+		setUniqueFullscreenMode(uniqueFullscreenMode);
+		if (filename!=null)
+			setSource(filename);
 	}
 	
-	@:functionCode('video = new Kore::LibVLCVideo(filename.c_str());')
-	private function init(filename: String) {}
+	@:functionCode('video = new Kore::LibVLCVideo();')
+	private function init() {}
 
+	@:functionCode('video->setSource(filename.c_str());') 
+	public function setSource(filename:String): Void {}
+	
 	@:functionCode('video->play();')
 	override public function play(loop: Bool = false): Void	{}
 	
@@ -35,11 +40,14 @@ class VLCVideo extends kha.Video
 	
 	override function get_position(): Int { return getCurrentPos(); }
 	
-	@:functionCode('video->update(value / 1000.0); return value;')
-	override function set_position(value: Int): Int { return 0; }
+	@:functionCode('video->setPosition(value / 1000.0); return value;')
+	override function set_position(value:Int): Int { return 0; }
 	
 	@:functionCode('return video->finished;')
 	override public function isFinished(): Bool { return false; }
+
+	@:functionCode('return video->width();')
+	override public function width(): Int { return 100; }
 
 	@:functionCode('return video->height();')
 	override public function height(): Int { return 100; }
@@ -65,8 +73,7 @@ class VLCVideo extends kha.Video
 		@:privateAccess image.initVideoX(this);
 
 		g2.color = kha.Color.White;
-		// g2.drawScaledSubImage(image, 0, 0, width(), height(), x, y, w, h);
-		g2.drawScaledSubImage(image, 0, 0, 1920, 1080, x, y, w, h);
+		g2.drawScaledSubImage(image, 0, 0, width(), height(), x, y, w, h);
 		@:privateAccess g2.setPipeline(null);
 	}
 }

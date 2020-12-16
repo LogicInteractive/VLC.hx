@@ -33,7 +33,7 @@ class Main
 		g2.begin();
 		g2.opacity = 1.0;
 		g2.color = kha.Color.White;
-		g2.mipmapScaleQuality = kha.graphics2.ImageScaleQuality.High;
+		g2.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;
 		if (vid!=null)
 			vid.draw(g2,0,0,System.windowWidth(),System.windowHeight());
 
