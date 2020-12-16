@@ -1,0 +1,142 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "Kha",
+			"target": "HTML5",
+			"problemMatcher": [
+				"$haxe-absolute",
+				"$haxe"
+			],
+			"label": "KhaHTML5"
+		},
+		{
+			"label": "Kha:HTML5-Debug",
+			"type": "shell",
+			"command": "xcopy",
+			"isBackground": true,
+			"args": [
+				"build\\debug-html5",
+				"bin",
+				"/i",
+				"/d",
+				"/y",
+				"/e",
+				"/q",
+				"/s"
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"group":{
+				"kind": "build",
+				"isDefault": true
+			},
+			"dependsOn": [
+				"Kha: Build for Debug HTML5"
+			],
+			"problemMatcher": []
+		},	
+		{
+			"type": "Kha",
+			"target": "HTML5",
+			"problemMatcher": [
+				"$haxe-absolute",
+				"$haxe"
+			],
+			"label": "KhaHTML5"
+		},
+		{
+			"label": "Kha: Build for HTML5",
+			"type": "shell",
+			"command": "xcopy",
+			"isBackground": true,
+			"args": [
+				"build\\html5",
+				"bin",
+				"/i",
+				"/d",
+				"/y",
+				"/e",
+				"/q",
+				"/s"
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"group":"build",
+			"dependsOn": [
+				"KhaHTML5"
+			],
+			"problemMatcher": []
+		},	
+/* 		{
+			"label": "Kha:Krom",
+			"type": "shell",
+			"command": "xcopy",
+			"isBackground": true,
+			"args": [
+				"build\\krom",
+				"bin",
+				"/i",
+				"/d",
+				"/y",
+				"/e",
+				"/q",
+				"/s"
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"group": "build",
+			"dependsOn": [
+				"Kha: Build for Krom"
+			],
+			"problemMatcher": []
+		}, */	
+		{
+			"label": "Kha Windows Release",
+			"type": "shell",
+			"command": "xcopy",
+			"isBackground": true,
+			"args": [
+				"build\\windows\\",
+				"bin",
+				"/i",
+				"/d",
+				"/y",
+				"/e",
+				"/q",
+				"/s"
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"group":"build",
+			"dependsOn": [
+				"Kha: Build for Windows (full build)"
+			],
+			"problemMatcher": []
+		}
+	]
+}

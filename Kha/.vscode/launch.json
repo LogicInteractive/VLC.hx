@@ -1,0 +1,36 @@
+{
+    "configurations": [
+        {
+            "type": "hxcpp",
+            "request": "launch",
+            "name": "Windows Build+Run",
+            "preLaunchTask": "Kha Windows Release",
+            "program": "${workspaceFolder}/bin/Kha-VLC.exe"
+        },
+        {
+            "type": "hxcpp",
+            "request": "launch",
+            "name": "Windows Run Only",
+            "internalConsoleOptions": "openOnSessionStart",
+            "program": "${workspaceFolder}/bin/Kha-VLC.exe"
+        },
+        {
+            "type": "electron",
+            "request": "launch",
+            "name": "Kha: HTML5",
+            "appDir": "${workspaceFolder}/build/debug-html5",
+            "cwd": "${workspaceFolder}/build/debug-html5",
+            "sourceMaps": true,
+            "preLaunchTask": "Kha: Build for Debug HTML5",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "krom",
+            "request": "launch",
+            "name": "Kha: Krom",
+            "preLaunchTask": "Kha: Build for Krom",
+            "internalConsoleOptions": "openOnSessionStart"
+        }
+    ],
+    "compounds": []
+}

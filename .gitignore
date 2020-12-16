@@ -1,3 +1,5 @@
-bin/build/**
-bin/build
-bin/movie2.mp4
+/Cli/bin/build/
+/Cli/bin/build/*.*
+
+/Kha/build/
+/Kha/build/*.*
