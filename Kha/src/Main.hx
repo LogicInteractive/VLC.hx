@@ -4,8 +4,6 @@ import kha.Assets;
 import kha.Framebuffer;
 import kha.Scheduler;
 import kha.System;
-import vlc.VLCPlayer;
-import vlc.VLCVideo;
 
 class Main
 {
@@ -48,13 +46,15 @@ class Main
 		g2.end();
 	}
 
-	static var vid:VLCVideo;
+	static var vid:vlc.VLCVideoCPP;
 
 	static function init()
 	{
-		vid = new VLCVideo("movie2.mp4",false);	
+		vid = new vlc.VLCVideoCPP("movie2.mp4",false);	
 		vid.play();
 
+		// new vlc.VLCVideo("movie2.mp4",false);	
+		
 		// var v:VLCPlayer = new VLCPlayer();	
 		// v.play("movie2.mp4");
 		// v.setFullscreen();
