@@ -46,14 +46,15 @@ class Main
 		g2.end();
 	}
 
-	static var vid:vlc.VLCVideoCPP;
+	static var vid:vlc.VLCVideo;
+	// static var vid:vlc.VLCVideoCPP;
 
 	static function init()
 	{
-		vid = new vlc.VLCVideoCPP("movie2.mp4",false);	
-		vid.play();
+		// vid = new vlc.VLCVideoCPP("movie2.mp4",false);	
+		// vid.play();
 
-		// new vlc.VLCVideo("movie2.mp4",false);	
+		vid = new vlc.VLCVideo("movie2.mp4",false);	
 		
 		// var v:VLCPlayer = new VLCPlayer();	
 		// v.play("movie2.mp4");

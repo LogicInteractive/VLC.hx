@@ -73,7 +73,7 @@ class VLCVideoCPP extends kha.Video
 
 		var image:kha.Image = @:privateAccess new kha.Image(false);
 		@:privateAccess image.format = kha.graphics4.TextureFormat.RGBA32;
-		@:privateAccess image.initVideoX(this);
+		// @:privateAccess image.initVideoX(this);
 
 		g2.color = kha.Color.White;
 		g2.drawScaledSubImage(image, 0, 0, width(), height(), x, y, w, h);
