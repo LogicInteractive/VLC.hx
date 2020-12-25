@@ -20,6 +20,7 @@ project.addCDefine('HXCPP_STACK_LINE');
 project.addCDefine('HXCPP_CHECK_POINTER');
 
 // project.addParameter('-dce full');
+// project.addParameter('--I LibVLC/sources');
 project.addParameter('-main Main');
 
 resolve(project);

@@ -9,6 +9,7 @@ class Main
 {
 	static function update(): Void
 	{
+		
 	}
 
 	public static function main()

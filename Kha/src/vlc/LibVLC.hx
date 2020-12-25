@@ -1,6 +1,6 @@
 package vlc;
 
-class LibVLC
+extern class LibVLC
 {
 	// Externs /////////////////////////////////////////////////////////////////////////
 
@@ -99,8 +99,8 @@ class LibVLC
 	* Set callbacks and private data to render decoded video to a custom area in memory.
 	* libvlc_video_set_callbacks (libvlc_media_player_t *mp, libvlc_video_lock_cb lock, libvlc_video_unlock_cb unlock, libvlc_video_display_cb display, void *opaque)
 	*/
-	@:native("libvlc_video_set_callbacks") @:void
-	extern public static function setCallbacks(mp:LibVLC_MediaPlayer_p,lock:LibVLC_Video_Lock_CB,unlock:LibVLC_Video_Unlock_CB,display:LibVLC_Video_Display_CB, opaque):Void;
+	@:native("libvlc_video_set_callbacks") 
+	extern public static function setCallbacks(mp:LibVLC_MediaPlayer_p,lock:LibVLC_Video_Lock_CB,unlock:LibVLC_Video_Unlock_CB,display:LibVLC_Video_Display_CB, opaque:VoidStar):Void;
 
 	/*
 	* Get the Event Manager from which the media player send event.
@@ -119,7 +119,7 @@ class LibVLC
 	* Registers a callback for the LibVLC exit event
 	*/
 	@:native("libvlc_set_exit_handler")
-	extern public static function setExitHandler(p_instance:LibVLC_Instance_p,cb,opaque):Void;
+	extern public static function setExitHandler(p_instance:LibVLC_Instance_p,cb:VoidStar,opaque:VoidStar):Void;
 
 	/*
 	* Registers a callback for the LibVLC exit event
@@ -157,9 +157,9 @@ typedef LibVLC_Event_const_p 					= cpp.ConstStar<LibVLC_Event>;
 @:native("libvlc_event_manager_t")				extern class LibVLC_Eventmanager {}
 
 
-typedef LibVLC_PixelBuffer_p = cpp.Star<LibVLC_PixelBuffer>;
-@:native("u8")									extern class LibVLC_PixelBuffer {}
-
+typedef LibVLC_PixelBuffer_p = cpp.Star<LibVLC_PixelBuffer_t>;
+typedef LibVLC_PixelBuffer_t = cpp.UInt8;
+// @:native("unsigned char")									extern class LibVLC_PixelBuffer {}
 
 typedef LibVLC_Video_Format_CB = cpp.Callable<(opaque:VoidStarStar, chroma:CharStar,width:UnsignedStar, height:UnsignedStar, pitches:UnsignedStar, lines:UnsignedStar) -> Unsigned>;
 typedef LibVLC_Video_Cleanup_CB = cpp.Callable<(opaque:VoidStar) -> Void>;
