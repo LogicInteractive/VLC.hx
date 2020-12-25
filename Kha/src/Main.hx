@@ -4,6 +4,7 @@ import kha.Assets;
 import kha.Framebuffer;
 import kha.Scheduler;
 import kha.System;
+import vlc.VLCVideo;
 
 class Main
 {
@@ -34,7 +35,13 @@ class Main
 		g2.color = kha.Color.White;
 		g2.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;
 		if (vid!=null)
-			vid.draw(g2,0,0,System.windowWidth(),System.windowHeight());
+			vid.draw(g2,0,0,System.windowWidth()*0.5,System.windowHeight()*0.5);
+		if (vid2!=null)
+			vid2.draw(g2,System.windowWidth()*0.5,0,System.windowWidth()*0.5,System.windowHeight()*0.5);
+		if (vid3!=null)
+			vid3.draw(g2,0,System.windowHeight()*0.5,System.windowWidth()*0.5,System.windowHeight()*0.5);
+		if (vid4!=null)
+			vid4.draw(g2,System.windowWidth()*0.5,System.windowHeight()*0.5,System.windowWidth()*0.5,System.windowHeight()*0.5);
 
 		g2.opacity = 0.5;
 		g2.color = kha.Color.Red;
@@ -47,7 +54,10 @@ class Main
 		g2.end();
 	}
 
-	static var vid:vlc.VLCVideo;
+	static var vid:VLCVideo;
+	static var vid2:VLCVideo;
+	static var vid3:VLCVideo;
+	static var vid4:VLCVideo;
 	// static var vid:vlc.VLCVideoCPP;
 
 	static function init()
@@ -55,7 +65,12 @@ class Main
 		// vid = new vlc.VLCVideoCPP("movie2.mp4",false);	
 		// vid.play();
 
-		vid = new vlc.VLCVideo("movie2.mp4",false);	
+		var vidfile:String = "C:/dev/Tools/video/test/bbb.mp4";
+
+		vid = new VLCVideo("D:\\Media\\Film\\Avengers.Infinity.War.2018.1080p.BluRay.x264-Replica[rarbg]\\rep-avengersinfinitywar.2018.1080p.bluray.x264.mkv");	
+		vid2 = new VLCVideo("D:\\Media\\Film\\Aquaman.2018.2160p.WEB-DL.DDP5.1.HDR.HEVC-MOMA\\Aquaman.2018.2160p.WEB-DL.DDP5.1.HDR.HEVC-MOMA.mkv");	
+		vid3 = new VLCVideo("D:\\Media\\Film\\Jurassic.World.Fallen.Kingdom.2018.1080p.BluRay.x264-SPARKS[rarbg]\\jurassic.world.fallen.kingdom.2018.1080p.bluray.x264-sparks.mkv");	
+		vid4 = new VLCVideo("D:\\Media\\Film\\Death.Wish.2018.1080p.BluRay.x264-DRONES[rarbg]\\Death.Wish.2018.1080p.BluRay.x264-DRONES.mkv");	
 		
 		// var v:VLCPlayer = new VLCPlayer();	
 		// v.play("movie2.mp4");

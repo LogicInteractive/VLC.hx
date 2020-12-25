@@ -33,15 +33,12 @@
 				"showReuseMessage": true,
 				"clear": false
 			},
-			"group":{
-				"kind": "build",
-				"isDefault": true
-			},
+			"group": "build",
 			"dependsOn": [
 				"Kha: Build for Debug HTML5"
 			],
 			"problemMatcher": []
-		},	
+		},
 		{
 			"type": "Kha",
 			"target": "HTML5",
@@ -74,41 +71,12 @@
 				"showReuseMessage": true,
 				"clear": false
 			},
-			"group":"build",
+			"group": "build",
 			"dependsOn": [
 				"KhaHTML5"
 			],
 			"problemMatcher": []
-		},	
-/* 		{
-			"label": "Kha:Krom",
-			"type": "shell",
-			"command": "xcopy",
-			"isBackground": true,
-			"args": [
-				"build\\krom",
-				"bin",
-				"/i",
-				"/d",
-				"/y",
-				"/e",
-				"/q",
-				"/s"
-			],
-			"presentation": {
-				"echo": false,
-				"reveal": "silent",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"group": "build",
-			"dependsOn": [
-				"Kha: Build for Krom"
-			],
-			"problemMatcher": []
-		}, */	
+		},
 		{
 			"label": "Kha Windows Release",
 			"type": "shell",
@@ -132,7 +100,10 @@
 				"showReuseMessage": true,
 				"clear": false
 			},
-			"group":"build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"dependsOn": [
 				"Kha: Build for Windows (full build)"
 			],

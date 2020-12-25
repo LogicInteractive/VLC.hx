@@ -1,5 +1,7 @@
 package vlc;
 
+#if kha_kore
+
 import cpp.Char;
 import cpp.ConstStar;
 import cpp.Function;
@@ -113,6 +115,7 @@ class VLCVideo extends kha.Video
 	
 	function setSource(path:String)
 	{
+		path = processPath(path);
 		media = LibVLC.mediaNewPath(vlcInstance,path);		
 		mediaPlayer = LibVLC.mediaPlayerNewFromMedia(media);
 		LibVLC.mediaParse(media);
@@ -130,8 +133,11 @@ class VLCVideo extends kha.Video
 		setupEvents(eventManager);
 	}
 
-	// @:functionCode('libvlc_video_set_callbacks(mediaPlayer, clockStatic, cunlockStatic, cdisplayStatic, this);') 
-	// public function setupCallbacks(): Void {}
+	function processPath(p:String):String
+	{
+		p = p.split("/").join("\\");
+		return p;
+	}
 
 	// Setup functions ////////////////////////////////////////////////////////////////////////
 
@@ -355,3 +361,15 @@ class VLCVideo extends kha.Video
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 }
+
+#else
+
+class VLCVideo extends kha.Video
+{
+	// Not implemented here
+	public function new(?path:String, ?uniqueFullscreenMode:Bool=false) { super(); }
+	override public function play(loop:Bool=false) { }
+	public function draw(g2:kha.graphics2.Graphics, ?x:Null<Float>, ?y:Null<Float>, ?w:Null<Float>, ?h:Null<Float>){}
+}
+
+#end
