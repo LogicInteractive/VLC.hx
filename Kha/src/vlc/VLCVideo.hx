@@ -5,6 +5,7 @@ package vlc;
 import cpp.Char;
 import cpp.ConstStar;
 import cpp.Function;
+import cpp.Native;
 import cpp.Star;
 import haxe.io.Bytes;
 import vlc.LibVLC;
@@ -25,8 +26,8 @@ std::vector<libvlc_event_t>internalEvent;
 
 // Static callbacks ///////////////////////////////////////////////////////////////////////
 
-#ifndef vlcCallbacks
-#define vlcCallbacks
+#ifndef VLCVideoCallbacks
+#define VLCVideoCallbacks
 
 using namespace Kore;
 
@@ -77,21 +78,26 @@ void VLCVideo_eventStatic(const libvlc_event_t *event, void *data)
 @:keep
 class VLCVideo extends kha.Video
 {
-	var cb_cleanup_active		: Bool					= false;
-	var cb_setup_active			: Bool					= false;
+	var cb_cleanup_active					: Bool					= false;
+	var cb_setup_active						: Bool					= false;
 
-	static public var vlcInstance: LibVLC_Instance_p;
-	public var mediaPlayer		: LibVLC_MediaPlayer_p;
-	public var media			: LibVLC_Media_p;
-	public var audioOutList		: LibVLC_AudioOutput_p;
-	public var eventManager		: LibVLC_Eventmanager_p;
+	static public var vlcInstance			: LibVLC_Instance_p;
+	public var mediaPlayer					: LibVLC_MediaPlayer_p;
+	public var media						: LibVLC_Media_p;
+	public var audioOutList					: LibVLC_AudioOutput_p;
+	public var eventManager					: LibVLC_Eventmanager_p;
 
-	public var pixels			: Array<cpp.UInt8>;
-	public var texture			: kha.Image;
-	public var canDraw			: Bool					= false;
-	public var videoWidth		: Int					= 0;
-	public var videoHeight		: Int					= 0;
-	public var currentTime		: Int					= 0;
+	public var pixels						: Array<cpp.UInt8>;
+	public var texture						: kha.Image;
+	public var canDraw						: Bool					= false;
+	public var videoWidth					: Int					= 0;
+	public var videoHeight					: Int					= 0;
+	public var length						: Int					= 0;
+	public var currentTime(default,never)	: Int					= 0;
+	// public var isPlaying(get,never)			: Bool					= 0;
+	// public var mediaCurrentPosition(get,never): Float					= 0;
+	public var endReached 					: Bool					= false;
+	public var isPaused						: Bool					= false;
 
 	// public var vlcMutex			: Mutex2;
 
@@ -113,6 +119,110 @@ class VLCVideo extends kha.Video
 		 LibVLC.mediaPlayerPlay(mediaPlayer);
 	}
 	
+	// External functions /////////////////////////////////////////////////////////////////////
+
+	override public function play(loop: Bool = false) : Void	 
+	{
+		playInternal();
+	}
+
+	/**
+	 * Pause the media element.
+	 */
+	override public function pause()
+	{
+		LibVLC.mediaPlayerSetPause(mediaPlayer,1);
+		isPaused = true;
+	}
+	
+	/**
+	 * Resume the media element from pause.
+	 */
+	public function resume()
+	{
+		LibVLC.mediaPlayerSetPause(mediaPlayer,0);
+		isPaused = false;		
+	}
+	
+	/**
+	 * Pause the stop element.
+	 */
+	override public function stop()
+	{
+		stopInternal();
+	}
+
+	// /**
+	//  * Return the media length, in milliseconds.
+	//  */
+	// override public function getLength() : Int // Milliseconds
+	// { 
+	// 	return 0;
+	// }
+	
+	// /**
+	//  * Return the media position, in milliseconds.
+	//  * Deprecated.
+	//  */
+	// override public function getCurrentPos() : Int // Milliseconds
+	// { 
+	// 	return 0;
+	// }
+
+	// override private function get_position(): Int
+	// {
+	// 	return 0;
+	// }
+
+	// private function set_position(value: Int): Int
+	// {
+	// 	return 0;
+	// }
+
+	/**
+	 * If the media has finished or not.
+	 */
+	override public function isFinished() : Bool
+	{
+		return endReached;
+	}
+
+	function get_isPlaying()
+	{
+    	return LibVLC.mediaPlayerIsPlaying(mediaPlayer);
+ 	}
+
+	/**	
+	 * Return the media volume, between 0 and 1.
+	 */
+	override public function getVolume():Float
+	{
+		return LibVLC.audioGetVolume(mediaPlayer)*0.001;
+	}
+
+	/**
+	 * Set the media volume, between 0 and 1.
+	 *
+	 * @param volume	The new volume, between 0 and 1.
+	 */
+	override public function setVolume(volume:Float)
+	{ 
+		LibVLC.audioSetVolume(mediaPlayer,Std.int(volume*1000));
+	}	
+
+	// Internal functions /////////////////////////////////////////////////////////////////////
+
+	function playInternal(?path:String)
+	{
+		endReached = false;
+		LibVLC.mediaPlayerPlay(mediaPlayer);
+	}
+
+	function stopInternal()
+	{
+		LibVLC.mediaPlayerStop(mediaPlayer);
+	}
+
 	function setSource(path:String)
 	{
 		path = processPath(path);
@@ -124,6 +234,7 @@ class VLCVideo extends kha.Video
 		LibVLC.setAudioOutput(mediaPlayer,"waveout");
 		LibVLC.audioSetVolume(mediaPlayer, 10);
 
+		// Pixelbuffer
 		pixels = [];
 
 		LibVLC.setFormatCallbacks(mediaPlayer, getSetupStaticCB(), getCleanupStaticCB());		
@@ -156,16 +267,11 @@ class VLCVideo extends kha.Video
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	override public function play(loop:Bool=false)
-	{
-		LibVLC.mediaPlayerPlay(mediaPlayer);
-	}
-
 	function grabFrame()
 	{
 		var buffer:LibVLC_PixelBuffer_p = lockTexture(texture);
 		var frameSize:UInt = getTextureWidth(texture)*getTextureHeight(texture)*4;
-		cpp.Native.nativeMemcpy(cast buffer, cast getPixelBuffer(), frameSize);
+		Native.nativeMemcpy(cast buffer, cast getPixelBuffer(), frameSize);
 		unlockTexture(texture);	
 	}
 
@@ -204,11 +310,15 @@ class VLCVideo extends kha.Video
 
 	function setupEvents(eventManager:LibVLC_Eventmanager_p)
 	{
+		if (eventManager==null)
+			return;
+
 		var self:cpp.Star<cpp.Void> = getThisPointer();
 		var cb:LibVLC_Callback = getEventStaticCB();
 
 		LibVLC.eventAttach( eventManager, LibVLC_EventType.mediaPlayerTimeChanged, cb, self);
 		LibVLC.eventAttach( eventManager, LibVLC_EventType.mediaPlayerPlaying, cb, self);
+		LibVLC.eventAttach( eventManager, LibVLC_EventType.mediaPlayerPaused, cb, self);
 		LibVLC.eventAttach( eventManager, LibVLC_EventType.mediaPlayerStopped, cb, self);
 		LibVLC.eventAttach( eventManager, LibVLC_EventType.mediaPlayerEndReached, cb, self);
 		LibVLC.eventAttach( eventManager, LibVLC_EventType.mediaPlayerPositionChanged, cb, self);
@@ -225,7 +335,7 @@ class VLCVideo extends kha.Video
 			case LibVLC_EventType.mediaPlayerPlaying:
 			{
 				// vlcp.isPlaying = true;
-				trace("IS PLAYING!");
+				// trace("IS PLAYING!");
 			}
 			case LibVLC_EventType.mediaPlayerPaused:
 			{
@@ -237,21 +347,19 @@ class VLCVideo extends kha.Video
 			}
 			case LibVLC_EventType.mediaPlayerEndReached:
 			{
-				// vlcp.isPlaying = false;
+				endReached = true;
 			}
 			case LibVLC_EventType.mediaPlayerTimeChanged:
 			{
-				// time = VLCPlayer.mediaPlayerGetTime(vlcp.mediaPlayer);
-				currentTime = event.u.media_player_time_changed.new_time;
+				// currentTime = event.u.media_player_time_changed.new_time;
 			}
 			case LibVLC_EventType.mediaPlayerPositionChanged:
 			{
-				// vlcp.position = event.u.media_player_position_changed.new_position;
+				// currentPosition = event.u.media_player_position_changed.new_position;
 			}
 			case LibVLC_EventType.mediaPlayerLengthChanged:
 			{
-				// vlcp.length = event.u.media_player_length_changed.new_length;
-			// self->flags[7]=event->u.media_player_length_changed.new_length;				
+				length = event.u.media_player_length_changed.new_length;
 			}
 			case LibVLC_EventType.mediaPlayerEncounteredError:
 			{
@@ -288,6 +396,26 @@ class VLCVideo extends kha.Video
 
 		// trace(event.type);
 	}
+
+	function detachEvents(eventManager:LibVLC_Eventmanager_p)
+	{
+		if (eventManager==null)
+			return;
+
+		var self:cpp.Star<cpp.Void> = getThisPointer();
+		var cb:LibVLC_Callback = getEventStaticCB();
+
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerTimeChanged, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerPlaying, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerStopped, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerPaused, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerEndReached, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerPositionChanged, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerLengthChanged, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerEncounteredError, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerPausableChanged, cb, self);
+		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerSeekableChange, cb, self);
+	}	
 
 	// Raw c++ interface //////////////////////////////////////////////////////////////////////
 
@@ -373,3 +501,5 @@ class VLCVideo extends kha.Video
 }
 
 #end
+
+

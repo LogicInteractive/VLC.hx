@@ -46,6 +46,23 @@ extern class LibVLC
 	@:native("libvlc_media_player_stop")
 	extern public static function mediaPlayerStop(p_mi:LibVLC_MediaPlayer_p):Void;
  	
+ 	
+	/*
+	* Pause or resume (no effect if there is no media)
+	*
+	* Parameters
+	* mp	the Media Player
+	* do_pause	play/resume if zero, pause if non-zero
+	*/
+	@:native("libvlc_media_player_set_pause")
+	extern public static function mediaPlayerSetPause(p_mi:LibVLC_MediaPlayer_p, do_pause:Int):Void;
+ 	
+	/*
+	* IsPlaying
+	*/
+	@:native("libvlc_media_player_is_playing")
+	extern public static function mediaPlayerIsPlaying(p_mi:LibVLC_MediaPlayer_p):Bool;
+ 	
 	/*
 	* Release a media_player after use Decrement the reference count of a media player object.
 	*/
@@ -116,16 +133,35 @@ extern class LibVLC
 	extern public static function eventAttach(p_event_manager:LibVLC_Eventmanager_p,i_event_type:LibVLC_EventType,f_callback:LibVLC_Callback,user_data:VoidStar):Int;
 
 	/*
+	* UnRegister for an event notification
+	*/
+	@:native("libvlc_event_detach")
+	extern public static function eventDetach(p_event_manager:LibVLC_Eventmanager_p,i_event_type:LibVLC_EventType,f_callback:LibVLC_Callback,user_data:VoidStar):Int;
+
+	/*
 	* Registers a callback for the LibVLC exit event
 	*/
 	@:native("libvlc_set_exit_handler")
 	extern public static function setExitHandler(p_instance:LibVLC_Instance_p,cb:VoidStar,opaque:VoidStar):Void;
 
 	/*
-	* Registers a callback for the LibVLC exit event
+	* Get the current movie time (in ms).
 	*/
 	@:native("libvlc_media_player_get_time")
-	extern public static function mediaPlayerGetTime(p_mi:LibVLC_MediaPlayer_p):cpp.Int64;
+	extern public static function mediaPlayerGetTime(p_mi:LibVLC_MediaPlayer_p):LibVLC_Time_t;
+
+	/**
+	* Set the movie time (in ms). This has no effect if no media is being played. Not all formats and protocols support this.
+	*
+	* Parameters
+	* p_mi	the Media Player
+	* b_fast	prefer fast seeking or precise seeking
+	* i_time	the movie time (in ms).
+	* Returns
+	* 0 on success, -1 on error
+	*/
+	@:native("libvlc_media_player_set_time")
+	extern public static function mediaPlayerSetTime(p_mi:LibVLC_MediaPlayer_p,i_time:LibVLC_Time_t,b_fast:Bool):Int;
 
 	/**
 	* Get the pixel dimensions of a video.
@@ -149,6 +185,7 @@ typedef LibVLC_Media_p 							= cpp.Star<LibVLC_Media>;
 typedef LibVLC_Eventmanager_p 					= cpp.Star<LibVLC_Eventmanager>;
 typedef LibVLC_Event_p		 					= cpp.Star<LibVLC_Event>;
 typedef LibVLC_Event_const_p 					= cpp.ConstStar<LibVLC_Event>;
+typedef LibVLC_Time_t		 					= cpp.Int64;
 
 @:native("libvlc_audio_output_t") 				extern class LibVLC_AudioOutput {}
 @:native("libvlc_instance_t") 					extern class LibVLC_Instance {}
