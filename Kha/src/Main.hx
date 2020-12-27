@@ -1,5 +1,6 @@
 package;
 
+import haxe.Timer;
 import kha.Assets;
 import kha.Framebuffer;
 import kha.Scheduler;
@@ -35,7 +36,7 @@ class Main
 		g2.color = kha.Color.White;
 		g2.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;
 		if (vid!=null)
-			vid.draw(g2,0,0,System.windowWidth()*0.5,System.windowHeight()*0.5);
+			vid.draw(g2,0,0,System.windowWidth(),System.windowHeight());
 
 		g2.opacity = 0.5;
 		g2.color = kha.Color.Red;
@@ -58,8 +59,14 @@ class Main
 
 		var vidfile:String = "C:/dev/Tools/video/test/bbb.mp4";
 
-		vid = new VLCVideo(vidfile);	
+		vid = new VLCVideo(vidfile);
+		vid.onBuffering = (v)->trace("buffering");
+		vid.onOpening = (v)->trace("opening");
+		vid.onPlaying = (v)->trace("playing");
+		vid.onStopped = (v)->trace("stopped");
 		
+		Timer.delay(()->vid.dispose(),10000);
+
 		// var v:VLCPlayer = new VLCPlayer();	
 		// v.play("movie2.mp4");
 		// v.setFullscreen();

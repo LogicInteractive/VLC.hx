@@ -18,7 +18,7 @@ using namespace Kore;
 ')
 @:headerInclude('vlc/vlc.h')
 @:headerClassCode('
-std::mutex vlcMutex;
+// std::mutex vlcMutex;
 std::vector<libvlc_event_t>internalEvent;
 ')
 @:unreflective
@@ -78,6 +78,8 @@ void VLCVideo_eventStatic(const libvlc_event_t *event, void *data)
 @:keep
 class VLCVideo extends kha.Video
 {
+	///////////////////////////////////////////////////////////////////////////////////////////
+	
 	var cb_cleanup_active					: Bool					= false;
 	var cb_setup_active						: Bool					= false;
 
@@ -92,14 +94,31 @@ class VLCVideo extends kha.Video
 	public var canDraw						: Bool					= false;
 	public var videoWidth					: Int					= 0;
 	public var videoHeight					: Int					= 0;
-	public var length						: Int					= 0;
+	public var durationInMs					: Int					= 0;
+	public var durationInSec				: Float					= 0;
 	public var currentTime(default,never)	: Int					= 0;
 	// public var isPlaying(get,never)			: Bool					= 0;
 	// public var mediaCurrentPosition(get,never): Float					= 0;
+	public var source	 					: String;
 	public var endReached 					: Bool					= false;
 	public var isPaused						: Bool					= false;
+	public var isDisposed					: Bool					= false;
+	public var looping						: Bool					= false;
 
 	// public var vlcMutex			: Mutex2;
+
+	///////////////////////////////////////////////////////////////////////////////////////////
+
+	public var onOpening					: (VLCVideo)->Void;
+	public var onBuffering					: (VLCVideo)->Void;
+	public var onPlaying					: (VLCVideo)->Void;
+	public var onStopped					: (VLCVideo)->Void;
+	public var onPaused						: (VLCVideo)->Void;
+	public var onResume						: (VLCVideo)->Void;
+	public var onProgress					: (VLCVideo)->Void;
+	public var onCompleted					: (VLCVideo)->Void;
+
+	///////////////////////////////////////////////////////////////////////////////////////////
 
 	public function new(?path:String, ?uniqueFullscreenMode:Bool=false)
 	{
@@ -113,16 +132,28 @@ class VLCVideo extends kha.Video
 			createPipeline();
 
 		// setUniqueFullscreenMode(uniqueFullscreenMode);
-		if (path!=null)
-			setSource(path);
-
-		 LibVLC.mediaPlayerPlay(mediaPlayer);
+		playVideo(path);
 	}
 	
 	// External functions /////////////////////////////////////////////////////////////////////
 
+	public function playVideo(path:String, loop:Bool=false)	 
+	{
+		if (path==null)
+			return;
+
+		this.looping = loop;
+
+		if (source!=path)
+		{
+			source = path;
+			playInternal();
+		}
+	}
+
 	override public function play(loop: Bool = false) : Void	 
 	{
+		this.looping = loop;
 		playInternal();
 	}
 
@@ -212,23 +243,36 @@ class VLCVideo extends kha.Video
 
 	// Internal functions /////////////////////////////////////////////////////////////////////
 
-	function playInternal(?path:String)
+	function playInternal()
 	{
 		endReached = false;
+		setSource(source);
 		LibVLC.mediaPlayerPlay(mediaPlayer);
 	}
 
 	function stopInternal()
 	{
+		// isPlaying = false;
 		LibVLC.mediaPlayerStop(mediaPlayer);
+		LibVLC.mediaPlayerRelease(mediaPlayer);
 	}
 
 	function setSource(path:String)
 	{
-		path = processPath(path);
-		media = LibVLC.mediaNewPath(vlcInstance,path);		
+		source = processPath(path);
+		media = LibVLC.mediaNewPath(vlcInstance,source);		
 		mediaPlayer = LibVLC.mediaPlayerNewFromMedia(media);
+		
 		LibVLC.mediaParse(media);
+
+		if (looping)
+			LibVLC.mediaAddOption(media, "input-repeat=-1" );
+		else
+			LibVLC.mediaAddOption(media, "input-repeat=0" );
+
+		durationInMs = LibVLC.mediaPlayerGetDuration(media);
+		durationInSec = (durationInMs*0.001);
+
 		LibVLC.mediaRelease(media);
 		
 		LibVLC.setAudioOutput(mediaPlayer,"waveout");
@@ -277,6 +321,9 @@ class VLCVideo extends kha.Video
 
 	public function draw(g2:kha.graphics2.Graphics, ?x:Null<Float>, ?y:Null<Float>, ?w:Null<Float>, ?h:Null<Float>)
 	{
+		if (isDisposed)
+			return;
+			
 		checkEvents();
 
 		if (!canDraw)
@@ -285,10 +332,8 @@ class VLCVideo extends kha.Video
 		grabFrame();
 
 		@:privateAccess g2.setPipeline(pipeline);
-		g2.color = kha.Color.White;
 		g2.drawScaledSubImage(texture, 0, 0, texture.width, texture.height, x, y, w, h);
 		@:privateAccess g2.setPipeline(null);
-
 	}
 	
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -300,12 +345,12 @@ class VLCVideo extends kha.Video
 		if (cb_cleanup_active)
 			cleanupFormat();
 
-		while(!isInternalQueueEmpty())
-		{
-			var e:LibVLC_Event = untyped __cpp__('internalEvent[0]');
-			eraseOldestItemFromInternalQueue();
-			onVlcEvent(e);
-		}
+		// while(!isInternalQueueEmpty())
+		// {
+			// var e:LibVLC_Event = untyped __cpp__('internalEvent[0]');
+			// onVlcEvent(e);
+			// eraseOldestItemFromInternalQueue();
+		// }
 	}
 
 	function setupEvents(eventManager:LibVLC_Eventmanager_p)
@@ -336,18 +381,26 @@ class VLCVideo extends kha.Video
 			{
 				// vlcp.isPlaying = true;
 				// trace("IS PLAYING!");
+				if (onPlaying!=null)
+					onPlaying(this);
 			}
 			case LibVLC_EventType.mediaPlayerPaused:
 			{
 				// vlcp.isPlaying = false;
+				if (onPaused!=null)
+					onPaused(this);
 			}
 			case LibVLC_EventType.mediaPlayerStopped:
 			{
 				// vlcp.isPlaying = false;
+				if (onStopped!=null)
+					onStopped(this);				
 			}
 			case LibVLC_EventType.mediaPlayerEndReached:
 			{
 				endReached = true;
+				if (onCompleted!=null)
+					onCompleted(this);			
 			}
 			case LibVLC_EventType.mediaPlayerTimeChanged:
 			{
@@ -359,7 +412,7 @@ class VLCVideo extends kha.Video
 			}
 			case LibVLC_EventType.mediaPlayerLengthChanged:
 			{
-				length = event.u.media_player_length_changed.new_length;
+				// length = event.u.media_player_length_changed.new_length;
 			}
 			case LibVLC_EventType.mediaPlayerEncounteredError:
 			{
@@ -380,10 +433,14 @@ class VLCVideo extends kha.Video
 			}
 			case LibVLC_EventType.mediaPlayerOpening:
 			{
+				if (onOpening!=null)
+					onOpening(this);				
 			}
 			case LibVLC_EventType.mediaPlayerBuffering:
 			{
 				// event.u.media_player_buffering.new_cache;
+				if (onBuffering!=null)
+					onBuffering(this);		
 			}
 			case LibVLC_EventType.mediaPlayerForward:
 			{
@@ -416,6 +473,43 @@ class VLCVideo extends kha.Video
 		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerPausableChanged, cb, self);
 		LibVLC.eventDetach( eventManager, LibVLC_EventType.mediaPlayerSeekableChange, cb, self);
 	}	
+
+	// Dispose ////////////////////////////////////////////////////////////////////////////////
+
+	public function dispose()
+	{
+		isDisposed=true;
+		canDraw=false;
+
+		stop();
+		// detachEvents(eventManager);
+
+		onOpening = null;
+		onBuffering = null;
+		onPlaying = null;
+		onStopped = null;
+		onPaused = null;
+		onResume = null;
+		onProgress = null;
+		onCompleted = null;
+
+		if (texture!=null)
+		{
+			texture.unload();
+			texture = null;
+		}
+		pixels = null;
+
+		eventManager = null;
+		audioOutList = null;
+		media = null;
+		mediaPlayer = null;
+		
+		clearInternalQueue();
+		deleteInternalQueue();
+
+		//LibVLC.release(vlcInstance); //? Keep it?
+	}
 
 	// Raw c++ interface //////////////////////////////////////////////////////////////////////
 
@@ -463,6 +557,12 @@ class VLCVideo extends kha.Video
 
 	@:functionCode("internalEvent.erase(internalEvent.begin());")
 	function eraseOldestItemFromInternalQueue() { }
+	
+	@:functionCode("internalEvent.clear();")
+	function clearInternalQueue() { }
+	
+	@:functionCode("internalEvent.resize(0);")
+	function deleteInternalQueue() { }
 
 	@:functionCode("return internalEvent.empty();")
 	function isInternalQueueEmpty():Bool { return true; }
@@ -490,13 +590,56 @@ class VLCVideo extends kha.Video
 	///////////////////////////////////////////////////////////////////////////////////////////
 }
 
+/* @:keep
+@:unreflective
+@:structAccess
+@:include('vector')
+@:native('std::vector<libvlc_event_t>')
+extern class VectorVLCEvent
+{
+    @:native('std::vector<libvlc_event_t>')
+    static function create() : VectorVLCEvent;
+
+    public function push_back(e:LibVLC_Event) : Void;
+    public function data() : cpp.RawPointer<LibVLC_Event>;
+    public function empty() : Bool;
+    public function size() : Int;
+    public function erase(num:Int) : Void;
+    public function begin() : Int;
+    public function resize(size:Int) : Void;
+    public function clear() : Void;
+    public function front() : LibVLC_Event;
+    public function back() : LibVLC_Event;
+} */
+
 #else
 
 class VLCVideo extends kha.Video
 {
+	public var texture						: kha.Image;
+	public var canDraw						: Bool					= false;
+	public var videoWidth					: Int					= 0;
+	public var videoHeight					: Int					= 0;
+	public var length						: Int					= 0;
+	public var source	 					: String;
+	public var endReached 					: Bool					= false;
+	public var isPaused						: Bool					= false;
+	public var isDisposed					: Bool					= false;
+	public var looping						: Bool					= false;
+	public var onOpening					: (VLCVideo)->Void;
+	public var onBuffering					: (VLCVideo)->Void;
+	public var onPlaying					: (VLCVideo)->Void;
+	public var onStopped					: (VLCVideo)->Void;
+	public var onPaused						: (VLCVideo)->Void;
+	public var onResume						: (VLCVideo)->Void;
+	public var onProgress					: (VLCVideo)->Void;
+	public var onCompleted					: (VLCVideo)->Void;	
+	
 	// Not implemented here
 	public function new(?path:String, ?uniqueFullscreenMode:Bool=false) { super(); }
 	override public function play(loop:Bool=false) { }
+	override public function stop() { }
+	public function dispose() { }
 	public function draw(g2:kha.graphics2.Graphics, ?x:Null<Float>, ?y:Null<Float>, ?w:Null<Float>, ?h:Null<Float>){}
 }
 

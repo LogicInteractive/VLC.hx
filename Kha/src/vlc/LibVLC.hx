@@ -145,6 +145,21 @@ extern class LibVLC
 	extern public static function setExitHandler(p_instance:LibVLC_Instance_p,cb:VoidStar,opaque:VoidStar):Void;
 
 	/*
+	* Get duration (in ms) of media descriptor object item.
+	* 
+	* Note, you need to call libvlc_media_parse_with_options() or play the media at least once before calling this function. Not doing this will result in an undefined result.
+	* See also
+	* libvlc_media_parse_with_options
+	* Parameters
+	* p_md	media descriptor object
+	* Returns
+	* duration of media item or -1 on error
+	* 
+	*/
+	@:native("libvlc_media_get_duration")
+	extern public static function mediaPlayerGetDuration(p_md:LibVLC_Media_p):LibVLC_Time_t;
+
+	/*
 	* Get the current movie time (in ms).
 	*/
 	@:native("libvlc_media_player_get_time")
@@ -175,6 +190,21 @@ extern class LibVLC
 	@:native("libvlc_video_get_size")
 	extern public static function videoGetSize(p_mi:LibVLC_MediaPlayer_p, num:UInt,width:UnsignedStar, height:UnsignedStar ):Int;
 
+	/**
+	* Add an option to the media.
+	*
+	* This option will be used to determine how the media_player will read the media. This allows to use VLC's advanced reading/streaming options on a per-media basis.
+	* 
+	* Note
+	* The options are listed in 'vlc –longhelp' from the command line, e.g. "--sout-all". Keep in mind that available options and their semantics vary across LibVLC versions and builds.
+	* Warning
+	* Not all options affects libvlc_media_t objects: Specifically, due to architectural issues most audio and video options, such as text renderer options, have no effects on an individual media. These options must be set through libvlc_new() instead.
+	* arameters
+	* p_md	the media descriptor
+	* psz_options	the options (as a string)
+	*/
+	@:native("libvlc_media_add_option")
+	extern public static function mediaAddOption(p_md:LibVLC_Media_p, psz_options:String):Void;
 
 }
 
