@@ -60,12 +60,10 @@ class Main
 		var vidfile:String = "C:/dev/Tools/video/test/bbb.mp4";
 
 		vid = new VLCVideo(vidfile);
-		vid.onBuffering = (v)->trace("buffering");
-		vid.onOpening = (v)->trace("opening");
 		vid.onPlaying = (v)->trace("playing");
 		vid.onStopped = (v)->trace("stopped");
 		
-		Timer.delay(()->vid.dispose(),10000);
+		// Timer.delay(()->vid.dispose(),10000);
 
 		// var v:VLCPlayer = new VLCPlayer();	
 		// v.play("movie2.mp4");

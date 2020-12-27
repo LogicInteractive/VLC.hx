@@ -176,7 +176,8 @@ extern class LibVLC
 	* 0 on success, -1 on error
 	*/
 	@:native("libvlc_media_player_set_time")
-	extern public static function mediaPlayerSetTime(p_mi:LibVLC_MediaPlayer_p,i_time:LibVLC_Time_t,b_fast:Bool):Int;
+	extern public static function mediaPlayerSetTime(p_mi:LibVLC_MediaPlayer_p,i_time:LibVLC_Time_t):Int;
+	// extern public static function mediaPlayerSetTime(p_mi:LibVLC_MediaPlayer_p,i_time:LibVLC_Time_t,b_fast:Bool):Int;
 
 	/**
 	* Get the pixel dimensions of a video.
